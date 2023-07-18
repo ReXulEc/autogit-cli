@@ -1,0 +1,23 @@
+{
+  "token": "a5833e854ad273320adf562bcf852e7a375a0e9d4fe1e767e12dd964108bbba70295b07ab54d5b42081604cfe151f92880a31e7021361ff69e2ccd93cc43cc60",
+  "listen": [
+    {
+      "git": "ReXulEc/testimngv2",
+      "path": "C:\\Users\\mertd\\Desktop\\Projects\\testimngv2",
+      "branch": "main",
+      "script": [
+        "echo test",
+        "echo emranın memesı sarkıyor"
+      ]
+    },
+    {
+      "git": "ReXulEc/testingtgesst",
+      "path": "C:\\Users\\mertd\\Desktop\\Projects\\testingtgesst",
+      "branch": "main",
+      "script": [
+        "echo test",
+        "echo aynn"
+      ]
+    }
+  ]
+}
