@@ -1,6 +1,6 @@
 {
   "name": "autogit-cli",
-  "version": "1.0.0",
+  "version": "2.1.9",
   "description": "",
   "main": "bin/index.js",
   "scripts": {
