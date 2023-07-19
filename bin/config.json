@@ -1,5 +1,5 @@
 {
-  "token": "a5833e854ad273320adf562bcf852e7a375a0e9d4fe1e767e12dd964108bbba70295b07ab54d5b42081604cfe151f92880a31e7021361ff69e2ccd93cc43cc60",
+  "token": "3a454a737aeb29e8da2ba37c4639df7ae095497c529af1dd082fdc2a62b89d1894ccc020981ae5e58102613163a4907b34073c1251d9d6812a2eb1053534a39d",
   "listen": [
     {
       "git": "ReXulEc/testimngv2",
@@ -15,8 +15,8 @@
       "path": "C:\\Users\\mertd\\Desktop\\Projects\\testingtgesst",
       "branch": "main",
       "script": [
-        "echo test",
-        "echo aynn"
+        "echo t",
+        "echo abc"
       ]
     }
   ]
