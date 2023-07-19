@@ -8,8 +8,11 @@ const fastify = require('fastify')();
 const { createLog } = require('../util/createLog.js');
 const { pull } = require('../util/pull.js');
 const { handleSignature } = require('../util/verifySignature.js');
+const { checkToken } = require('../util/checkToken.js');
 const PORT = +process.env.PORT || 3000;
 let startTime = process.hrtime();
+let configPath = __dirname + "\\config.json";
+
 
 yargs
     .command({
@@ -28,7 +31,7 @@ yargs
                 },
                 chars: { 'mid': ' ', 'mid-mid': '│', 'left-mid': '│', 'right-mid': '│' }
             });
-            fs.readFile(__dirname + "\\config.json", 'utf8', (err, content) => {
+            fs.readFile(configPath, 'utf8', (err, content) => {
                 if (err) {
                     createLog('ERROR', err.message, true);
                 }
@@ -48,12 +51,19 @@ yargs
         describe: "",
         aliases: 'r',
         handler: function (argv) {
-            fs.readFile(__dirname + "\\config.json", 'utf8', (err, content) => {
+            fs.readFile(configPath, 'utf8', (err, content) => {
                 if (err) {
                     //checkEnv(err, false);
                     console.log(err)
                 }
                 let config = JSON.parse(content);
+                checkToken(config).then((res) => {
+                    if (!res) {
+                        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+                    } else {
+                        console.log('Token is already set.')
+                    }
+                })
                 fastify.post('/webhook', async (request, reply) => {
                     if (handleSignature(request, config.token) === false) {
                         createLog('ERROR', 'Invalid signature', true);
@@ -117,31 +127,34 @@ yargs
             script: {
                 describe: 'aynn',
                 demandOption: true,
-                type: 'object'
+                type: 'string'
             },
         },
         handler: function (argv) {
-            //fs write
-            const yeniVeri = {
+
+            let yeniVeri = {
                 git: argv.git,
                 path: process.cwd(),
                 branch: argv.branch,
                 script: argv.script
             };
+            //fs write
+            if(typeof argv.script === 'string' || argv.script instanceof String){
+                yeniVeri.script = [argv.script]
+            }
 
-            let dosyaYolu = __dirname + "\\config.json";
-            console.log(dosyaYolu);
+
 
             try {
                 let mevcutVeriler = [];
-                if (fs.existsSync(dosyaYolu)) {
-                    const dosyaIcerigi = fs.readFileSync(dosyaYolu, 'utf8');
+                if (fs.existsSync(configPath)) {
+                    const dosyaIcerigi = fs.readFileSync(configPath, 'utf8');
                     mevcutVeriler = JSON.parse(dosyaIcerigi);
                 }
 
-                mevcutVeriler.push(yeniVeri);
+                mevcutVeriler.listen.push(yeniVeri);
 
-                fs.writeFileSync(dosyaYolu, JSON.stringify(mevcutVeriler, null, 2));
+                fs.writeFileSync(configPath, JSON.stringify(mevcutVeriler, null, 2));
                 console.log('Veri başarıyla JSON dosyasına eklendi.');
             } catch (hata) {
                 console.error('Dosya işlemleri hatası:', hata);
@@ -155,10 +168,8 @@ yargs
         handler: function (argv) {
             //fs write
 
-            let jsonFilePath = __dirname + "\\config.json";
-
             // Read the JSON file
-            fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+            fs.readFile(configPath, 'utf8', (err, data) => {
                 if (err) {
                     console.error('Error reading JSON file:', err);
                     return;
@@ -178,7 +189,7 @@ yargs
                     const updatedJson = JSON.stringify(json, null, 2);
 
                     // Write the updated JSON back to the file
-                    fs.writeFile(jsonFilePath, updatedJson, 'utf8', err => {
+                    fs.writeFile(configPath, updatedJson, 'utf8', err => {
                         if (err) {
                             console.error('Error writing JSON file:', err);
                             return;
@@ -194,52 +205,7 @@ yargs
 
         }
     })
-    .command({
-        command: 'delete <ID>',
-        describe: "",
-        aliases: 'a',
-        handler: function (argv) {
-            //fs write
 
-            let jsonFilePath = __dirname + "\\config.json";
-
-            // Read the JSON file
-            fs.readFile(jsonFilePath, 'utf8', (err, data) => {
-                if (err) {
-                    console.error('Error reading JSON file:', err);
-                    return;
-                }
-
-                try {
-                    // Parse the JSON data
-                    const json = JSON.parse(data);
-
-                    // Specify the index of the object you want to delete from the "listen" array
-                    const indexToDelete = argv.ID; // Replace with the desired index to delete
-
-                    // Delete the object from the "listen" array at the specified index
-                    json.listen.splice(indexToDelete, 1);
-
-                    // Convert the JSON object back to a string
-                    const updatedJson = JSON.stringify(json, null, 2);
-
-                    // Write the updated JSON back to the file
-                    fs.writeFile(jsonFilePath, updatedJson, 'utf8', err => {
-                        if (err) {
-                            console.error('Error writing JSON file:', err);
-                            return;
-                        }
-                        console.log('JSON file updated successfully.');
-                    });
-                } catch (error) {
-                    console.error('Error parsing JSON:', error);
-                }
-            });
-
-
-
-        }
-    })
     .demandCommand()
     .help()
     .argv
@@ -259,3 +225,44 @@ yargs.command(['start [app]', 'run', 'up'], 'Start up an app', {}, (argv) => {
     }
   })
 */
+
+/*
+    .command({
+        command: 'edit <ID> <Key> <Value>',
+        describe: "",
+        aliases: 'a',
+        handler: function (argv) {
+            //fs write
+
+            let jsonFilePath = __dirname + "\\config.json";
+            // JSON dosyasını oku
+            fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+              if (err) {
+                console.error('Dosya okunurken bir hata oluştu:', err);
+                return;
+              }
+            
+              // JSON verisini ayrıştır
+              const json = JSON.parse(data);
+            
+              // İstenilen öğeyi güncelle
+              console.log()
+              json.listen[argv.ID][argv.Key] = argv.Value.toString();
+              // Güncellenmiş JSON'i dosyaya geri yaz
+              fs.writeFile(jsonFilePath, JSON.stringify(json), 'utf8', (err) => {
+                if (err) {
+                  console.error('Dosyaya yazılırken bir hata oluştu:', err);
+                  return;
+                }
+                console.log('JSON dosyası başarıyla güncellendi.');
+              });
+              
+            });
+            
+
+
+
+        }
+    })
+
+    */
