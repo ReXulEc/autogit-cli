@@ -1,4 +1,3 @@
-require('dotenv').config()
 const sha256 = require('js-sha256');
 
 const verify_signature = (req, token) => {
