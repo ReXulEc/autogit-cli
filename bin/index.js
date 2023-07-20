@@ -11,7 +11,12 @@ const { checkToken } = require('../util/checkToken.js');
 const { reset } = require("colorette");
 const PORT = 3000;
 let startTime = process.hrtime();
-let configPath = __dirname + "\\config.json";
+let configPath;
+if(process.platform === "win32"){
+    configPath = __dirname + "\\config.json";
+} else if(process.platform === "linux"){
+    configPath = __dirname + "/config.json";
+}
 
 
 yargs
@@ -47,10 +52,13 @@ yargs
         }
     })
     .command({
-        command: 'run',
+        command: 'run [port]',
         describe: "",
         aliases: 'r',
         handler: function (argv) {
+            if (argv.port) {
+                PORT = argv.port;
+            }
             fs.readFile(configPath, 'utf8', (err, content) => {
                 if (err) {
                     //checkEnv(err, false);
