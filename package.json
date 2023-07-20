@@ -1,7 +1,7 @@
 {
-  "name": "autogit-cli",
-  "version": "2.1.9",
-  "description": "",
+  "name": "autopull",
+  "version": "2.2.0",
+  "description": "Autopull is a Cli app allows changes that are made in the repository to get pulled to your computer or your server in real time by using the GitHub's Webhooks.",
   "main": "bin/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
