@@ -2,14 +2,14 @@
 const yargs = require("yargs");
 const fs = require("fs");
 const Table = require('cli-table3');
-require('dotenv').config()
 const ngrok = require('ngrok');
 const fastify = require('fastify')();
 const { createLog } = require('../util/createLog.js');
 const { pull } = require('../util/pull.js');
 const { handleSignature } = require('../util/verifySignature.js');
 const { checkToken } = require('../util/checkToken.js');
-const PORT = +process.env.PORT || 3000;
+const { reset } = require("colorette");
+const PORT = 3000;
 let startTime = process.hrtime();
 let configPath = __dirname + "\\config.json";
 
@@ -60,8 +60,6 @@ yargs
                 checkToken(config).then((res) => {
                     if (!res) {
                         fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-                    } else {
-                        console.log('Token is already set.')
                     }
                 })
                 fastify.post('/webhook', async (request, reply) => {
@@ -139,7 +137,7 @@ yargs
                 script: argv.script
             };
             //fs write
-            if(typeof argv.script === 'string' || argv.script instanceof String){
+            if (typeof argv.script === 'string' || argv.script instanceof String) {
                 yeniVeri.script = [argv.script]
             }
 
@@ -159,6 +157,43 @@ yargs
             } catch (hata) {
                 console.error('Dosya işlemleri hatası:', hata);
             }
+        }
+    })
+    .command({
+        command: 'token [show] [reset]',
+        describe: "",
+        builder: {
+            
+            reset: {
+                describe: 'You can reset token with this command',
+                demandOption: false,
+                type: 'boolean'
+            },
+            show: {
+                describe: 'You can show token with this command',
+                demandOption: true,
+                type: 'boolean'
+            },
+        },
+        handler: function (argv) {
+            fs.readFile(configPath, 'utf8', (err, content) => {
+                if (err) {
+                    //checkEnv(err, false);
+                    checkToken("ERROR FS", err, true)
+                }
+                let config = JSON.parse(content);
+                if (argv.reset === true) {
+                    checkToken(config, true).then((res) => {
+                        if (res) {
+                            fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+                            createLog("TOKEN", "Token reseted successfully")
+                        }
+                    })
+                }
+                if (argv.show === true) {
+                    createLog("TOKEN", config.token)
+                }
+            })
         }
     })
     .command({
