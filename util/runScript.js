@@ -1,8 +1,6 @@
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const { createLog } = require('./createLog.js');
-require('dotenv').config()
-const fs = require('fs');
 
 async function runScript(commands, git) {
   for (const command of commands) {
