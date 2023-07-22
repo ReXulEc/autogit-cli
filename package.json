@@ -1,13 +1,13 @@
 {
-  "name": "autopull",
-  "version": "2.2.0",
+  "name": "togitpull",
+  "version": "2.2.2",
   "description": "Autopull is a Cli app allows changes that are made in the repository to get pulled to your computer or your server in real time by using the GitHub's Webhooks.",
   "main": "bin/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "autogit": "./bin/index.js"
+    "togitpull": "./bin/index.js"
   },
   "author": "",
   "license": "ISC",

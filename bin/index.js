@@ -8,14 +8,18 @@ const { createLog } = require('../util/createLog.js');
 const { pull } = require('../util/pull.js');
 const { handleSignature } = require('../util/verifySignature.js');
 const { checkToken } = require('../util/checkToken.js');
-const { reset } = require("colorette");
-const PORT = 3000;
-let startTime = process.hrtime();
-let configPath;
-if(process.platform === "win32"){
-    configPath = __dirname + "\\config.json";
-} else if(process.platform === "linux"){
-    configPath = __dirname + "/config.json";
+
+let configPath; // Config path
+switch (process.platform) {
+    case "win32":
+        configPath = __dirname + "\\config.json"; // Windows
+        break;
+    case "linux":
+        configPath = __dirname + "/config.json"; // Linux
+        break;
+    default:
+        configPath = __dirname + "/config.json"; // Default
+        break;
 }
 
 
@@ -38,7 +42,7 @@ yargs
             });
             fs.readFile(configPath, 'utf8', (err, content) => {
                 if (err) {
-                    createLog('ERROR', err.message, true);
+                    createLog('ERROR', err.message, true); // Error while reading config file
                 }
                 let config = JSON.parse(content);
                 Object.entries(config.listen).forEach(async ([key, repo]) => {
@@ -52,12 +56,40 @@ yargs
         }
     })
     .command({
-        command: 'run [port]',
+        command: 'run [port] [dev]',
         describe: "",
         aliases: 'r',
+        builder: {
+            port: {
+                describe: 'aynn',
+                demandOption: false,
+                type: 'number',
+                usage: 'Usage: $0 <command> [options]',
+            },
+            dev: {
+                describe: 'aynn',
+                demandOption: false,
+                type: "boolean"
+            }
+        },
         handler: function (argv) {
-            if (argv.port) {
-                PORT = argv.port;
+            const startTime = process.hrtime();
+            PORT = argv.port || 3000;
+            console.log(argv.dev)
+            if (argv.dev) {
+                (async function () {
+                    await ngrok.connect({
+                      addr: PORT, // port or network address, defaults to 80
+                      region: process.env.NGROK_REGION, // one of ngrok regions (us, eu, au, ap, sa, jp, in), defaults to us
+                      onStatusChange: status => { createLog("NGROK STATUS", status.charAt(0).toUpperCase() + status.slice(1)) }, // 'closed' - connection is lost, 'connected' - reconnected
+                      onLogEvent: data => {
+                        if (data.includes("url")) {
+                          let url = data.split(" ")[data.split(" ").length - 1].slice(4)
+                          createLog("NGROK", `Ngrok is running on ${url}`)
+                        }
+                      },
+                    });
+                  })();
             }
             fs.readFile(configPath, 'utf8', (err, content) => {
                 if (err) {
@@ -77,22 +109,20 @@ yargs
                     }
 
                     config.listen.forEach(async (repo) => {
-                        if (repo.git === request.body.repository.full_name) {
-                            const branchCheck = () => {
-                                if (request.body.ref.replace('refs/heads/', '') === repo.branch) {
-                                    return { success: true, branch: request.body.ref.replace('refs/heads/', '') };
-                                } else {
-                                    return false;
-                                }
+                        const Checks = () => {
+                            if (repo.git.toLowerCase() === request.body.repository.name.toLowerCase() && repo.branch.toLowerCase() === request.body.ref.replace('refs/heads/', '').toLowerCase() && request.body?.commits) {
+                                return { success: true, branch: request.body.ref.replace('refs/heads/', '') };
+                            } else {
+                                return false;
                             }
+                        }
 
-                            if (request.body?.commits) {
-                                if (branchCheck().success === true) {
-                                    createLog(repo.git + ' | WEBHOOK', 'Received push event to ' + branchCheck().branch + ' branch');
-                                    await pull(repo.path, repo.git, repo.script);
-                                };
-                                reply.send({ received: true });
-                            }
+                        if (Checks().success === true) {
+                            reply.send({ received: true });
+                            createLog(repo.git + ' | WEBHOOK', 'Received push event to ' + Checks().branch + ' branch');
+                            await pull(repo.path, repo.git, repo.script);
+                        } else {
+                            reply.send({ received: false })
                         }
                     });
                 });
@@ -171,7 +201,7 @@ yargs
         command: 'token [show] [reset]',
         describe: "",
         builder: {
-            
+
             reset: {
                 describe: 'You can reset token with this command',
                 demandOption: false,

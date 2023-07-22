@@ -7,11 +7,7 @@ const verify_signature = (req, token) => {
 };
 
 const handleSignature = (req, token) => {
-    if (!verify_signature(req, token)) {
-        return false;
-    } else {
-        return true;
-    }
+    return (verify_signature(req, token));
 };
 
 module.exports = {handleSignature}
